@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -36,20 +37,22 @@ func watchSubdirectories(directory string, watcher *fsnotify.Watcher) {
 	}
 }
 
-func startCommand(args []string) {
-	cmd = exec.Command(args[0], args[1:]...)
+func startCommand(path string, c string) {
+	cmdArgs := strings.Split(c, " ")
+	fmt.Println(cmdArgs[0], cmdArgs[1:])
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd.Dir = path
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
-	err := cmd.Start()
+	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("cmd.Run() failed with %s\n", err)
 	}
-
-	log.Printf("Command started: %s\n", args)
 }
 
-func restartCommand() {
+func restartCommand(path string, c string) {
+	fmt.Println("Restarting", cmd, cmd)
+
 	if cmd != nil && cmd.Process != nil {
 		err := cmd.Process.Kill()
 		if err != nil {
@@ -60,19 +63,20 @@ func restartCommand() {
 
 		// Start the command again
 		fmt.Println(cmd.Args)
-		startCommand(cmd.Args)
+		startCommand(path, c)
 	}
 }
 
 func main() {
-	if len(os.Args) < 4 {
-		// fmt.Println("Usage: go run main.go /path/to/directory command arg1 arg2 ...")
-		return
-	}
+	// if len(os.Args) < 4 {
+	// 	// fmt.Println("Usage: go run main.go /path/to/directory command arg1 arg2 ...")
+	// 	return
+	// }
 
-	directory := os.Args[1]
-	commandArgs := os.Args[2:]
-	fmt.Println(commandArgs)
+	directory := flag.String("d", "./", "Directory on which hot loader should run ")
+	commandArgs := flag.String("cmd", "", "Go execution command")
+	flag.Parse()
+
 	// Create a new watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -81,16 +85,16 @@ func main() {
 	defer watcher.Close()
 
 	// Watch the initial directory
-	if err := watcher.Add(directory); err != nil {
+	if err := watcher.Add(*directory); err != nil {
 		log.Fatal(err)
 	}
 	// log.Printf("Monitoring directory: %s\n", directory)
 
 	// Watch subdirectories
-	watchSubdirectories(directory, watcher)
+	watchSubdirectories(*directory, watcher)
 
 	// Start the initial command
-	startCommand(commandArgs)
+	go startCommand(*directory, *commandArgs)
 
 	// Start an event loop to handle events
 	for {
@@ -105,9 +109,10 @@ func main() {
 			if event.Op == fsnotify.Write {
 				// if event.Op
 				f := strings.Split(event.Name, ".")
+
 				if f[len(f)-1] == "go" {
 
-					restartCommand()
+					restartCommand(*directory, *commandArgs)
 				}
 
 			}
