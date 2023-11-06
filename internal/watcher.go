@@ -60,9 +60,9 @@ func (wr *Watcher) Start() {
 
 				if f[len(f)-1] == "go" {
 
-					if time.Since(wr.lastUpdate) > 1*time.Second {
-						wr.startCommand()
-					}
+					// if time.Since(wr.lastUpdate) > 1*time.Second {
+					wr.startCommand()
+					// }
 
 				}
 

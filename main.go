@@ -81,52 +81,9 @@ func main() {
 	// }
 
 	directory := flag.String("d", "./", "Directory on which hot loader should run ")
-	commandArgs := flag.String("cmd", "", "Go execution command")
+	commandArgs := flag.String("file", "", "Go execution command")
 	flag.Parse()
 	wg := internal.NewWatcher(*directory, *commandArgs)
 	wg.Init()
 	wg.Start()
-	// // Create a new watcher
-	// watcher, err := fsnotify.NewWatcher()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer watcher.Close()
-
-	// // Watch the initial directory
-	// if err := watcher.Add(*directory); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// // Start the initial command
-	// startCommand(*directory, *commandArgs)
-
-	// // Start an event loop to handle events
-	// for {
-	// 	select {
-	// 	case event, ok := <-watcher.Events:
-	// 		if !ok {
-	// 			return
-	// 		}
-
-	// 		// Restart the command when an event is caught
-	// 		// log.Printf("Event: %s\n", event)
-	// 		if event.Op == fsnotify.Write {
-
-	// 			f := strings.Split(event.Name, ".")
-
-	// 			if f[len(f)-1] == "go" {
-
-	// 				restartCommand(*directory, *commandArgs)
-	// 			}
-
-	// 		}
-
-	// 	case err, ok := <-watcher.Errors:
-	// 		if !ok {
-	// 			return
-	// 		}
-	// 		log.Printf("Error: %s\n", err)
-	// 	}
-	// }
 }
